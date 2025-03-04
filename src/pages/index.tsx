@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 const MicrophoneVolume: React.FC = () => {
     const [volume, setVolume] = useState<number>(0);
-    const [audioFile, setAudioFile] = useState<File | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState<number>(0);
     const [duration, setDuration] = useState<number>(0);
@@ -10,10 +9,9 @@ const MicrophoneVolume: React.FC = () => {
     const analyserRef = useRef<AnalyserNode | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const [listenTimer, setListenTimer] = useState(10); // 5 seconds
+    const [listenTimer, setListenTimer] = useState(60);
     const [isMicrophoneAccessed, setIsMicrophoneAccessed] = useState(false);
     const [remainingTime, setRemainingTime] = useState<number>(0);
-    const [babyVolume, setbabyVolume] = useState(50)
 
     const getMicrophoneAccess = async () => {
         try {
@@ -38,9 +36,8 @@ const MicrophoneVolume: React.FC = () => {
 
                     setVolume(avg);
 
-                    // Check volume and handle audio playback
-                    if (avg > 80 && !isPlaying) {
-                      startListenTimer()
+                    if (avg > 100 && !isPlaying) {
+                        startListenTimer();
                     }
                 }
                 requestAnimationFrame(checkVolume);
@@ -74,12 +71,11 @@ const MicrophoneVolume: React.FC = () => {
             audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
         }
 
-        // Set up listen timer interval
         intervalRef.current = setInterval(() => {
             if (remainingTime > 0) {
                 setRemainingTime(prev => prev - 1);
             } else {
-                pauseAudio(); // Pause audio when timer runs out
+                pauseAudio();
             }
         }, 1000);
 
@@ -89,12 +85,11 @@ const MicrophoneVolume: React.FC = () => {
                 audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
             }
         };
-    }, [remainingTime]); // Depend on remainingTime
+    }, [remainingTime]);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            setAudioFile(file);
             if (audioRef.current) {
                 audioRef.current.src = URL.createObjectURL(file);
                 audioRef.current.load();
@@ -122,44 +117,24 @@ const MicrophoneVolume: React.FC = () => {
         }
     };
 
-    const requestMicrophoneAccess = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            console.log('Microphone access granted');
-        } catch (error) {
-            console.error('Error accessing microphone:', error);
-            alert('Microphone access denied. Please check your browser settings.');
-        }
-    };
-
     const startListenTimer = () => {
-        setRemainingTime(listenTimer); // Set the remaining time to the listen timer
-        playAudioForDuration(listenTimer); // Start playing audio for the listen timer duration
+        setRemainingTime(listenTimer);
+        playAudioForDuration(listenTimer);
     };
 
     return (
-        <div dir='rtl'>
-
-          
-{!isMicrophoneAccessed && (
-                <button onClick={getMicrophoneAccess} className='w-100 flex'>
-                  دسترسی به میکروفن
+        <div dir='rtl' className='p-2'>
+            {!isMicrophoneAccessed && (
+                <button onClick={getMicrophoneAccess} className='w-100 flex p-5 bg-[#0fcabd] text-[white]'>
+                    دسترسی به میکروفن
                 </button>
             )}
-           
-           <div className='w-[100%] h-auto flex'>
-           <p> میزان بلندی صدا  :</p><span>{volume}</span>
-           </div>
-          
-            <label className='text-[black]'>صدا بعد از چند دقیقه استاپ شود
+            <div className='w-[100%] h-auto flex'>
+                <p> میزان بلندی صدا  :</p><span>{volume}</span>
+            </div>
+            <label className='text-[black]'>صدا بعد از چند ثانیه استاپ شود :  
                 <input type="number" value={listenTimer} onChange={(e) => setListenTimer(Number(e.target.value))} placeholder='time' />
             </label>
-
-{/* 
-            <button onClick={startListenTimer} style={{ padding: '10px 20px', marginBottom: '20px' }}>
-                Start Listening Timer
-            </button> */}
-
             <div className='w-[100%] flex flex-col justify-center items-center bg-red-400'>
                 <h1>Upload and Play Music</h1>
                 <input
@@ -173,7 +148,7 @@ const MicrophoneVolume: React.FC = () => {
                     if (isPlaying) {
                         pauseAudio();
                     } else {
-                      startListenTimer();
+                        startListenTimer();
                     }
                 }} style={{ padding: '10px 20px' }}>
                     {isPlaying ? 'Pause' : 'Start'}
@@ -197,10 +172,6 @@ const MicrophoneVolume: React.FC = () => {
                     />
                 </div>
             </div>
-{/* 
-            <button onClick={requestMicrophoneAccess} style={{ padding: '10px 20px', marginBottom: '20px' }}>
-                Request Microphone Access
-            </button> */}
         </div>
     );
 };

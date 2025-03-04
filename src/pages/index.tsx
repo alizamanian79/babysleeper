@@ -36,7 +36,7 @@ const MicrophoneVolume: React.FC = () => {
 
                     setVolume(avg);
 
-                    if (avg > 100 && !isPlaying) {
+                    if (avg > 40 && !isPlaying) {
                         startListenTimer();
                     }
                 }
